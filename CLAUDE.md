@@ -24,4 +24,118 @@ teaching scenario.
 
 ## Working context
 
-_You'll fill this in during Module 1._
+I am the new PM for **Rook Dispatch**, taking over from Priya Raghunathan
+(left 21 Aug 2026; she was the only Dispatch PM for 14 months). Sources: rook-wiki
+(search_wiki, then read_page / read_database), rook-database for numbers, and
+`00-rook/company/notes/handoff-from-priya.docx`. Wiki comments name people by role only.
+
+### Company and products
+- Rook Industries sells coordination and provisioning software to independent masked
+  responders and their handlers and quartermasters. Subscription, priced per active responder.
+  Ships monthly on a release train; point releases are 4.x.
+- **Rook Dispatch** (mine): availability, proximity, who gets pinged about a callout, whether
+  they take it. Users: handlers (console, desktop) and responders (phone).
+- **Rook Supply**: requisitions, maintenance, field failure reports. Users: handlers, quartermasters.
+- **Confidentiality:** cover identities are never stored; never try to work out who anyone is,
+  and read Security Policy 4.1 before designing anything touching responder records.
+
+### People (roles in wiki comments -> names)
+| Role | Name | Notes |
+|---|---|---|
+| Director of Product | Helen Achebe | My director; owns roadmap and commitments |
+| Engineering Manager | Marcus Oyelaran | Runs Dispatch eng; Priya said start here |
+| Staff Engineer | Wen Li | Built the ping-ranking logic; no doc exists, talk to her |
+| Product Designer | Sofia Marino | Console and phone app; ran the September interviews |
+| Support Lead | Nadia Hoffmann | Owns tickets; has the ticket breakdown |
+| Data Analyst | Ravi Menon | Weekly report on how often responders take pings (Priya wrongly pointed to the EM for numbers) |
+
+### Vocabulary
+- Callout (unit of work) -> **ping** (offered to one responder) -> **taken**, **turned down**, or
+  **missed** (ping wait ran out). Turned down and missed are recorded separately; both move the ping on.
+- **Ping wait**: how long a ping stays on a phone (Priya's doc says "timeout"); same for everyone.
+- **Acceptance rate** (taken / pings; headline metric), **time-to-accept** (median seconds).
+- **Coverage gap**: no available responder had the needed capability tags. Not the same as low acceptance.
+- **Routing priority**: ranks responders by travel-time proximity, availability, capability match,
+  recent acceptance history. Declining or missing a ping lowers recent acceptance, so lowers later rank.
+- Capability tags, Responder Availability Record (written by Dispatch, read by Supply), mutual aid
+  (unsupported, Q4 exploration). Supply: requisition, field failure report, service interval.
+
+### Where things stand
+- **4.0** (7 Apr): new nav, profile redesign, routing-override audit log. **4.1** (16 Jun): travel-time
+  proximity, bulk callout, push reliability. **4.2** (12 Aug): proximity weighted up vs. acceptance
+  history, ping wait 90s -> 60s, filters persist, three fixes. Clean rollout.
+- **The 4.2 problem:** since ~12 Aug callout tickets run ~3x normal. About two thirds "phone never
+  goes off", one third "gone before I could answer" (explained by the 60s wait). Wen Li has not answered
+  Marcus's 14 Aug question: does the change apply to responders who keep turning pings down, or was
+  that unintended? Config doesn't distinguish. A handler emailed Nadia directly (rare).
+- **Two changes shipped together** (proximity weighting, 60s ping wait), so the cause is confounded.
+  Priya's view is "seasonal, August is soft, don't revert 4.2". Marcus, Nadia and Priya all deferred
+  the question to September.
+- **Data check (rook-database, 29 Jun-6 Sep; no prior-year data, so seasonality can't be tested):**
+  - Acceptance rate was flat at 75-78% for six weeks, then dropped as a step at the 12 Aug release,
+    not a slide: 54% (week of 10 Aug), 66%, 67%, 73% (week of 31 Aug). Recovering, not back to baseline.
+  - Missed pings went from 2-6/week to 38, 28, 24, 21. Turned-down share is roughly unchanged.
+    Pings per callout rose from ~1.23 to ~1.30 (1.61 in release week). Weekly callouts fell from ~140
+    to 110-127, so demand is a bit lower, but that doesn't explain the acceptance step.
+  - Tickets: 5-8/week before, then 20, 27, 32, 25. Matches Nadia's "~3x". Of 107 tickets since 12 Aug
+    (classified by subject line), 30 are "phone never goes off / quiet" and 15 "gone before I could
+    answer": a 67/33 split, matching Nadia. The other 62 are unrelated (filters, gear, dark mode).
+    Twenty of the 30 "quiet" tickets are about just Farlight and The Undertow (10 each); the rest
+    are Corporal Ashgrove and Halfmoon (5 each), whose pings fell only from ~11 to ~7-8 a week.
+  - **Four responders account for the "phone never goes off" pattern:** Farlight, Meteor Mite,
+    The Undertow, Vesper. They had ~75 pings each pre-release (~77% taken). Post-release they got 56
+    pings combined (14 each), 13 taken, 33 missed. Farlight has had no ping since 28 Aug. The other 12
+    responders went from 77% to 68% taken, missed 2% -> 14%, consistent with the shorter ping wait.
+  - **Geography doesn't explain it** (only named areas in the data, no distances). Farlight (Uptown),
+    The Undertow (Harborside) and Vesper (Old Town) are the sole responder in their area and were pinged
+    for nearly every callout there pre-release (90%+ taken). Post-release they got ~6-10 own-area pings
+    each; those callouts went to responders from other areas. Meteor Mite shares Eastgate with The Gale,
+    who got 54 of the pings to Meteor Mite's 9. Proximity-up should have favored them, so the likelier
+    suspect is a ranking penalty from misses/declines (hypothesis; Wen Li to confirm).
+  - Meteor Mite and Vesper (handlers Kip and Aunt Dot) show the same collapse but have filed no tickets.
+  - Not established: why those four. Pre-release their turned-down share (~22%) matched everyone
+    else's, so I haven't confirmed Marcus's "frequent decliners" idea. Ranking inputs aren't in the
+    database; Wen Li can confirm. Ping wait length isn't in the data either.
+- **Roadmap (Q3, last reviewed 30 Jun, stale):** Change to who gets pinged, Ping timeout tuning: 4.2,
+  shipped. **Availability Confidence: marked Committed for 4.2 but absent from the 4.2 notes**, so it
+  was squeezed out (Priya's "things I didn't get to"). Requisition approval chains: 4.3 Committed.
+  Handler phone app, Shared cover between responders: Q4 Exploring. Priya never had the commitment
+  conversation with Helen; I need to.
+- **Briefs:** Bulk Callout (Jan) and Routing Override Audit Log (Mar) read as unbuilt but shipped in
+  4.1 and 4.0, so they are stale. Handler Phone App (8 Sep, Sofia exploring, unstaffed, no baseline).
+  Requisition Approval Chains (Supply, 14 Jul) has one real ask (second approval over $2,000) buried
+  under four scope additions.
+- **Routing code** (`00-rook/code/dispatch-routing`, owner Wen Li): weights are global, so 4.2 applies
+  to everyone, answering the config half of Marcus's 14 Aug question; whether it was a decision is
+  still unanswered. 4.2 weights proximity/acceptance/capability 0.60/0.25/0.15 (was 0.45/0.40/0.15),
+  offer timeout 60s (was 90). Accepted +0.08, declined **or missed** -0.12 (same penalty), floor 0,
+  start 0.5. The score never decays (Wen's 2019 TODO asks if it should), so "recent acceptance" isn't
+  recent. It sits in an in-memory dict, so it may reset on deploy (ask Wen). Ranking only orders the
+  list, but callouts average ~1.3 pings, so low rank means rarely asked, and a responder who isn't
+  asked can't earn the score back. That is the leading explanation for the four quiet responders
+  (hypothesis; no per-responder scores are in the database).
+- **Contradictions and gaps:** "ping wait" (glossary), "timeout" (Priya, roadmap) and
+  `OFFER_TIMEOUT_SECONDS` (code) are one setting. Helen's undated `05-super-speed/director-request.txt`
+  says engineering traced the quiet-responder problem into the routing code and a fix is "small enough
+  to ship this afternoon"; the wiki records neither. The DB has no answer times, so time-to-accept and
+  the 60s wait can't be checked, and no data after early Sep. Roadmap owners are all Priya and stale.
+  Tickets 3063/3128 show requisitions already stuck 9+ days, while the requisition brief adds a step.
+  `06-sidekicks/scheduled-run-output.txt` cites a `briefs/` folder that isn't here and misses that
+  two briefs shipped. Halloran is a handler in the interviews but a quartermaster in the Supply briefs.
+  I have not read Customer interviews or the Training Class PDFs.
+- **Open to-dos:** write the product-level description of ranking (code and README exist, no product
+  doc); do not let console filter-persistence tickets eat the first month (though some are real bugs).
+
+### Session notes (Module 1)
+- Sources that mattered most: the routing code and the rook-database `pings` table. The wiki alone
+  can't explain 4.2. Next-session first step: ask Wen Li whether scores persist across deploys and
+  whether the 4.2 weights were a deliberate decision.
+- Biggest open question: why Farlight, Meteor Mite, The Undertow and Vesper fell out of the ping order.
+  Helen wants a one-pager on what to build for them (and a clickable version), not a number change.
+- Marcus asked to regroup on 4.2 once the new PM had looked; nobody has recorded that it happened.
+- Wiki and ticket claims have held up when I checked them (ticket volume, the 67/33 theme split);
+  Priya's "seasonal" and "mostly noise" calls have not.
+
+### How to help me
+Separate wiki fact from opinion (Priya's handoff is opinion). Check claims against rook-database
+before repeating them (tables: callouts, pings, responders, handlers, support_tickets). Name people and roles together. Flag stale wiki pages.

@@ -24,6 +24,26 @@ prompt library built from your own questions.
 
 ### 1.
 
+What does the answer to the question "An unanswered question. Marcus asked Wen Li on 14 Aug whether the proximity change was meant to apply to responders who keep turning pings down. Wen Li hasn’t answered." matter?
+
+Define Availability Confidence for me.
+
+What are the Bulk Callout and the Routing Override Audit Log?
+
 ### 2.
 
+Why have you not queried rook-database, so every numeric claim in it is unchecked?
+
 ### 3.
+
+What do you mean with "I also didn’t count how many tickets fall into each of Nadia’s two themes."?
+
+### 4.
+
+Are the Phone never goes off key responders geographically in a place that might put them at a disadvantage?
+
+### 5.
+
+Do not trim it.
+
+What is contradictory or missing across the wiki pages, the handover note, the database, and the rest of this folder?
