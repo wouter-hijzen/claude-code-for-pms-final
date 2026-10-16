@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rook Dispatch - quiet responders (prototype)</title>
+<style>
+  :root {
+    --navy: #1b2a41; --navy2: #2a3f5f; --ink: #1e2430; --muted: #667085; --line: #e3e7ee;
+    --bg: #f4f6fa; --card: #fff; --accent: #2d6cdf; --warn: #b54708; --warnbg: #fff4e5;
+    --ok: #067647; --okbg: #e7f6ee; --bad: #b42318; --badbg: #fdecea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 -apple-system, "Segoe UI", Arial, sans-serif; color: var(--ink); background: var(--bg); }
+  header.top { background: var(--navy); color: #fff; display: flex; align-items: center; gap: 24px; padding: 0 20px; height: 52px; }
+  header.top .brand { font-weight: 700; letter-spacing: .3px; }
+  header.top .brand span { opacity: .6; font-weight: 400; }
+  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .tabs button { background: transparent; border: 0; color: #c8d3e6; padding: 8px 14px; border-radius: 6px; cursor: pointer; font: inherit; }
+  .tabs button.on { background: var(--navy2); color: #fff; }
+  .banner { background: #fff8e1; border-bottom: 1px solid #f0e2a8; padding: 8px 20px; font-size: 12.5px; color: #6b5800; }
+  .layout { display: flex; min-height: calc(100vh - 52px - 36px); }
+  nav.side { width: 170px; background: #fff; border-right: 1px solid var(--line); padding: 16px 0; flex: none; }
+  nav.side div { padding: 9px 20px; color: var(--muted); }
+  nav.side div.on { color: var(--accent); font-weight: 600; background: #eef3fd; border-left: 3px solid var(--accent); padding-left: 17px; }
+  main { flex: 1; padding: 20px 24px; min-width: 0; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); margin-bottom: 14px; }
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .seg button { border: 0; background: #fff; padding: 7px 14px; cursor: pointer; font: inherit; color: var(--muted); }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .alert { background: var(--warnbg); border: 1px solid #f7d6a4; color: var(--warn); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+  .alert b { color: #7a2e0e; }
+  .cols { display: flex; gap: 18px; align-items: flex-start; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f2f6; }
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: #f7f9fd; }
+  tr.row.sel td { background: #eaf1fe; }
+  tr:last-child td { border-bottom: 0; }
+  .chip { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .chip.quiet { background: var(--badbg); color: var(--bad); }
+  .chip.ok { background: var(--okbg); color: var(--ok); }
+  .num { font-variant-numeric: tabular-nums; }
+  .dim { color: var(--muted); }
+  .side-panel { width: 400px; flex: none; padding: 18px; }
+  .side-panel h2 { margin: 0 0 4px; font-size: 17px; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin: 12px 0 4px; position: relative; padding-bottom: 0; }
+  .bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 11px; color: var(--muted); }
+  .bar i { display: block; width: 100%; background: #9db8ee; border-radius: 4px 4px 0 0; min-height: 2px; }
+  .bar.usual i { background: #cbd2de; }
+  .bar.low i { background: #e5786d; }
+  .bar b { color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+  .half { position: absolute; left: 0; right: 0; border-top: 1.5px dashed #b54708; }
+  .half span { position: absolute; right: 0; top: -17px; font-size: 10.5px; color: #b54708; background: #fff; }
+  .labels { display: flex; gap: 10px; font-size: 10.5px; color: var(--muted); text-align: center; }
+  .labels div { flex: 1; }
+  ul.log { list-style: none; margin: 8px 0 0; padding: 0; }
+  ul.log li { padding: 7px 0; border-bottom: 1px solid #f0f2f6; display: flex; justify-content: space-between; gap: 8px; }
+  ul.log li:last-child { border-bottom: 0; }
+  .miss { color: var(--bad); font-weight: 600; }
+  .box { background: #f4f8ff; border: 1px solid #cfe0fb; border-radius: 8px; padding: 12px; margin-top: 14px; }
+  .box h3 { margin: 0 0 4px; font-size: 13.5px; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 13px; cursor: pointer; font: inherit; font-weight: 600; }
+  .btn.ghost { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  .btn.red { background: #fff; color: var(--bad); border: 1px solid #f0b4ad; }
+  .btn.row { margin-right: 6px; margin-top: 8px; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .result { margin-top: 10px; padding: 10px; border-radius: 8px; background: #fff; border: 1px solid var(--line); }
+  .empty { padding: 40px 18px; color: var(--muted); text-align: center; }
+  /* phone */
+  .stage { display: flex; gap: 40px; justify-content: center; padding: 28px 12px; flex-wrap: wrap; }
+  .phone { width: 320px; border: 10px solid #111827; border-radius: 36px; background: #fff; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+  .phone .bar-top { background: var(--navy); color: #fff; padding: 14px 16px; font-weight: 700; }
+  .phone .body { padding: 16px; min-height: 480px; }
+  .phone .tag { background: #fff4e5; color: var(--warn); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; margin-bottom: 14px; }
+  .ping { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .ping h4 { margin: 0 0 4px; font-size: 16px; }
+  .timer { font-size: 30px; font-weight: 700; margin: 10px 0 4px; font-variant-numeric: tabular-nums; }
+  .timerbar { height: 6px; background: #e8ecf3; border-radius: 4px; overflow: hidden; }
+  .timerbar i { display: block; height: 100%; background: var(--accent); width: 100%; transition: width 1s linear; }
+  .phone .btns { display: flex; gap: 8px; margin-top: 14px; }
+  .phone .btns button { flex: 1; padding: 11px; border-radius: 9px; border: 0; font: inherit; font-weight: 700; cursor: pointer; }
+  .take { background: var(--ok); color: #fff; }
+  .turn { background: #eef0f4; color: var(--ink); }
+  .side-note { max-width: 340px; color: var(--muted); font-size: 13px; }
+  .side-note h3 { color: var(--ink); margin-top: 0; }
+  select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); }
+  #hCards { max-width: 860px; }
+  .hcard { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+  .hcard.quiet { border-left: 4px solid #e5786d; }
+  .hcard h2 { margin: 0; font-size: 18px; }
+  .hcard .lead { font-size: 15px; margin: 10px 0 4px; }
+  .hcard .facts { color: var(--muted); margin: 0 0 6px; }
+  .hcard .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .hcard .panel { background: #f7f9fc; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .hcard .panel h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+  .hcard .compact { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hcard .compact h2 { font-size: 16px; }
+  .toast { margin-top: 8px; padding: 9px 11px; border-radius: 8px; background: #fff; border: 1px solid var(--line); font-size: 13px; }
+  .draft { white-space: pre-wrap; background: #fff; border: 1px dashed #b8c3d6; border-radius: 8px; padding: 9px 11px; margin-top: 8px; font-size: 13px; }
+  @media (max-width: 900px) { .hcard .grid { grid-template-columns: 1fr; } }
+  .chip.prop { background: #eef3fd; color: var(--accent); }
+  .opt { margin-bottom: 8px; }
+  nav.side .navlink { cursor: pointer; }
+  nav.side .navlink:hover { background: #f4f6fa; }
+  .tbl { width: 100%; margin-top: 10px; font-size: 13px; }
+  .tbl td, .tbl th { padding: 6px 8px; }
+  .tbl .local { font-weight: 600; color: var(--ok); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Rook Dispatch <span>· console</span></div>
+  <div class="tabs">
+    <button id="tab-handler" class="on">Handler console</button>
+    <button id="tab-phone">Responder phone</button>
+    <button id="tab-internal">Internal view (product team)</button>
+  </div>
+</header>
+<div class="banner">Prototype. Ping figures are real, from the Rook database for 29 Jun to 6 Sep 2026 (data ends there). The changes on screen are proposed, not built.</div>
+
+<div id="handler" class="layout">
+  <nav class="side">
+    <div>Callouts</div>
+    <div class="on">Your responders <span id="hBadge" class="chip quiet" style="font-size:10px;padding:1px 6px" hidden></span></div>
+    <div>Coverage</div>
+    <div>Routing overrides</div>
+    <div>Reports</div>
+  </nav>
+  <main>
+    <h1>Your responders</h1>
+    <div class="sub">How each responder you look after is being asked about callouts.</div>
+    <div class="toolbar">
+      <span class="dim">Viewing as</span> <select id="hWho"></select>
+      <div class="seg" id="hViewSeg">
+        <button data-v="today">What handlers see today</button>
+        <button data-v="change" class="on">With this change</button>
+      </div>
+      <span class="dim" id="hNote"></span>
+    </div>
+    <div id="hCards"></div>
+  </main>
+</div>
+
+<div id="console" class="layout" hidden>
+  <nav class="side">
+    <div>Callouts</div>
+    <div class="on navlink" id="nav-resp">Responders</div>
+    <div class="navlink" id="nav-areas">Areas <span class="chip ok" style="font-size:10px;padding:1px 6px">Proposed</span></div>
+    <div>Coverage</div>
+    <div>Routing overrides</div>
+    <div>Reports</div>
+  </nav>
+  <main id="areasMain" hidden>
+    <h1>Areas</h1>
+    <div class="sub">Who is being asked about callouts in each area. Click an area for detail.</div>
+    <div id="areaAlert"></div>
+    <div class="cols">
+      <div class="card" style="flex:1; min-width:0; overflow-x:auto"><table id="areaTable"></table></div>
+      <div class="card side-panel" id="areaDetail"></div>
+    </div>
+  </main>
+  <main id="respMain">
+    <h1>Responders</h1>
+    <div class="sub">Everyone you can ask about a callout. Click a row for detail.</div>
+    <div class="toolbar">
+      <div class="seg" id="viewSeg">
+        <button data-v="today">What handlers see today</button>
+        <button data-v="change" class="on">With this change</button>
+      </div>
+      <span class="dim" id="viewNote"></span>
+    </div>
+    <div id="alert"></div>
+    <div class="cols">
+      <div class="card" style="flex:1; min-width:0; overflow-x:auto"><table id="roster"></table></div>
+      <div class="card side-panel" id="detail"></div>
+    </div>
+  </main>
+</div>
+
+<div id="phoneView" class="stage" hidden>
+  <div>
+    <div class="phone">
+      <div class="bar-top">Rook</div>
+      <div class="body" id="phoneBody"></div>
+    </div>
+  </div>
+  <div class="side-note">
+    <h3>What the responder sees</h3>
+    <p>When the system sends a quiet responder a re-entry ping, the phone says why, so a quiet stretch does not feel like a broken phone.</p>
+    <p>
+      Responder:
+      <select id="phoneWho"></select>
+    </p>
+    <p>Take it, turn it down, or let the 60 seconds run out. A missed re-entry ping carries no penalty.</p>
+    <p class="dim">Whether a turned-down re-entry ping counts as a normal decline is an assumption to confirm with Wen Li.</p>
+  </div>
+</div>
+
+<script>
+// Real figures: weekly pings per responder from rook-database (weeks starting 10, 17, 24, 31 Aug; the 10 Aug week includes two days before release).
+// "usual" is the average weekly pings from 29 Jun to 9 Aug.
+const R = [
+  { name:"Captain Vantage",   area:"Hillcrest",     usual:12.0, w:[13,15,17,18], missedLast:2 },
+  { name:"Cindermark",        area:"Mill District", usual:9.0,  w:[10,11,12,12], missedLast:1 },
+  { name:"Corporal Ashgrove", area:"Northfield",    usual:10.0, w:[10,8,7,7],    missedLast:1 },
+  { name:"Farlight",          area:"Uptown",        usual:12.0, w:[10,3,1,0],    missedLast:0,
+    lastPing:"22 Aug", log:[
+      { when:"28 Aug, 19:28", area:"Mill District", out:"missed" },
+      { when:"23 Aug, 13:51", area:"Mill District", out:"missed" }
+    ] },
+  { name:"Halfmoon",          area:"Westbury",      usual:11.0, w:[11,9,8,8],    missedLast:0 },
+  { name:"Ironvale",          area:"Riverside",     usual:8.0,  w:[9,10,11,12],  missedLast:2 },
+  { name:"Meteor Mite",       area:"Eastgate",      usual:11.2, w:[10,4,2,1],    missedLast:1 },
+  { name:"Nightwell",         area:"Midtown",       usual:15.0, w:[16,18,20,21], missedLast:2 },
+  { name:"Sgt. Bulwark",      area:"Foundry Row",   usual:9.0,  w:[10,10,11,11], missedLast:2 },
+  { name:"Sgt. Falkirk",      area:"Kingsbridge",   usual:10.0, w:[11,13,15,16], missedLast:2 },
+  { name:"Stormwrack",        area:"Southport",     usual:13.0, w:[14,16,18,19], missedLast:2 },
+  { name:"The Drift",         area:"Greenway",      usual:6.2,  w:[7,7,8,8],     missedLast:1 },
+  { name:"The Gale",          area:"Eastgate",      usual:13.0, w:[15,17,20,21], missedLast:2 },
+  { name:"The Longcast",      area:"Lakeshore",     usual:7.2,  w:[8,8,9,9],     missedLast:1 },
+  { name:"The Undertow",      area:"Harborside",    usual:12.0, w:[11,4,1,1],    missedLast:1 },
+  { name:"Vesper",            area:"Old Town",      usual:13.8, w:[12,5,2,1],    missedLast:1 }
+];
+// Proposed rule: "quiet" = pings last week below 50% of their own usual.
+R.forEach(r => { r.last = r.w[3]; r.quiet = r.last < 0.5 * r.usual; });
+// Taken pings per week (same weeks as above) and the usual taken rate (29 Jun to 9 Aug), from rook-database.
+const TAKEN = {
+  "Captain Vantage":[74,[8,11,13,13]], "Cindermark":[80,[6,8,8,9]], "Corporal Ashgrove":[78,[6,5,5,5]],
+  "Farlight":[74,[4,0,0,0]], "Halfmoon":[73,[6,5,5,7]], "Ironvale":[77,[5,6,8,9]], "Meteor Mite":[69,[4,1,0,0]],
+  "Nightwell":[76,[9,14,13,15]], "Sgt. Bulwark":[76,[5,8,7,8]], "Sgt. Falkirk":[80,[7,9,11,11]],
+  "Stormwrack":[79,[8,12,13,15]], "The Drift":[84,[4,5,6,5]], "The Gale":[78,[9,12,14,16]],
+  "The Longcast":[74,[5,6,5,7]], "The Undertow":[78,[4,1,0,0]], "Vesper":[82,[6,1,0,0]]
+};
+R.forEach(r => {
+  r.usualTaken = TAKEN[r.name][0];
+  r.taken = TAKEN[r.name][1];
+  // taken % per week, null when there were no pings that week
+  r.rate = r.w.map((n, i) => n ? Math.round(100 * r.taken[i] / n) : null);
+  r.lastRate = r.rate[3];
+});
+
+const state = { view:"change", sel:"Farlight", sim:null };
+
+const $ = s => document.querySelector(s);
+const find = n => R.find(r => r.name === n);
+
+function renderAlert() {
+  const q = R.filter(r => r.quiet);
+  $("#alert").innerHTML = state.view === "change" && q.length
+    ? `<div class="alert"><b>${q.length} responders not offered lately:</b> ${q.map(r => r.name).join(", ")}. Their pings last week were under half of their usual.</div>`
+    : "";
+  $("#viewNote").textContent = state.view === "today"
+    ? "Pieced together from the Dispatch wiki page and the handler interviews; not checked against the live console."
+    : "Quiet = pings last week under 50% of their own usual.";
+}
+
+function renderRoster() {
+  let rows = R.slice();
+  if (state.view === "change") rows.sort((a,b) => (b.quiet - a.quiet) || a.name.localeCompare(b.name));
+  if (state.view === "today") {
+    $("#roster").innerHTML = `<tr><th>Responder</th><th>Area</th><th></th></tr>` +
+      rows.map(r => `<tr class="row ${state.sel===r.name?'sel':''}" data-n="${r.name}"><td><b>${r.name}</b></td><td>${r.area}</td><td class="dim">Availability and tags</td></tr>`).join("");
+  } else {
+    $("#roster").innerHTML = `<tr><th>Responder</th><th>Area</th><th>Pings last week</th><th>Taken %</th><th>Missed</th><th>Status</th></tr>` +
+      rows.map(r => `<tr class="row ${state.sel===r.name?'sel':''}" data-n="${r.name}">
+        <td><b>${r.name}</b></td><td>${r.area}</td>
+        <td class="num">${r.last} <span class="dim">(usual ~${Math.round(r.usual)})</span></td>
+        <td class="num">${r.lastRate === null ? '<span class="dim">no pings</span>' : r.lastRate + '%'} <span class="dim">(usual ${r.usualTaken}%)</span></td>
+        <td class="num">${r.missedLast}</td>
+        <td>${r.quiet ? '<span class="chip quiet">Not offered lately</span>' : '<span class="chip ok">Normal</span>'}</td></tr>`).join("");
+  }
+  document.querySelectorAll("tr.row").forEach(tr => tr.onclick = () => { state.sel = tr.dataset.n; state.sim = null; renderAll(); });
+}
+
+function bars(r) {
+  const max = Math.max(r.usual, ...r.w) * 1.3;
+  const h = v => Math.max(2, Math.round(v / max * 100));
+  const labels = ["Usual / wk","wk 10 Aug","wk 17 Aug","wk 24 Aug","wk 31 Aug"];
+  const vals = [r.usual, ...r.w];
+  const html = vals.map((v,i) => {
+    const cls = i === 0 ? "usual" : (v < 0.5 * r.usual ? "low" : "");
+    return `<div class="bar ${cls}"><b>${Math.round(v)}</b><i style="height:${h(v)}%"></i></div>`;
+  }).join("");
+  const halfBottom = h(r.usual / 2);
+  return `<div class="bars">${html}<div class="half" style="bottom:${halfBottom}%"><span>half of usual</span></div></div>
+          <div class="labels">${labels.map(l => `<div>${l}</div>`).join("")}</div>`;
+}
+
+function rateChart(r) {
+  const xs = [45, 125, 205, 285], labels = ["wk 10 Aug", "wk 17 Aug", "wk 24 Aug", "wk 31 Aug"];
+  const y = v => 10 + (100 - v) * 0.8;
+  let d = "", pen = false, dots = "", gaps = "";
+  r.rate.forEach((v, i) => {
+    if (v === null) { pen = false; gaps += `<text x="${xs[i]}" y="${y(0) - 6}" text-anchor="middle" font-size="9.5" fill="#667085">no pings</text>`; return; }
+    d += (pen ? " L" : " M") + xs[i] + " " + y(v); pen = true;
+    dots += `<circle cx="${xs[i]}" cy="${y(v)}" r="3.5" fill="${v < 50 ? '#e5786d' : '#2d6cdf'}"/>` +
+            `<text x="${xs[i]}" y="${y(v) - 8}" text-anchor="middle" font-size="10.5" font-weight="600" fill="#1e2430">${v}%</text>`;
+  });
+  const u = y(r.usualTaken);
+  return `<svg viewBox="0 0 340 125" width="100%" style="margin-top:6px">
+    <line x1="10" x2="330" y1="${y(0)}" y2="${y(0)}" stroke="#e3e7ee"/>
+    <line x1="10" x2="330" y1="${u}" y2="${u}" stroke="#9aa4b5" stroke-dasharray="4 3"/>
+    <text x="330" y="${u - 4}" text-anchor="end" font-size="9.5" fill="#667085">usual ${r.usualTaken}%</text>
+    <path d="${d}" fill="none" stroke="#2d6cdf" stroke-width="2"/>${dots}${gaps}
+    ${xs.map((x, i) => `<text x="${x}" y="118" text-anchor="middle" font-size="9.5" fill="#667085">${labels[i]}</text>`).join("")}
+  </svg>`;
+}
+
+function renderDetail() {
+  const r = find(state.sel), box = $("#detail");
+  if (!r) { box.innerHTML = `<div class="empty">Select a responder</div>`; return; }
+  if (state.view === "today") {
+    box.innerHTML = `<h2>${r.name}</h2><div class="dim">${r.area}</div>
+      <div class="empty">Handlers can edit availability windows and capability tags here, and see a coverage card per responder.<br>Nothing explains why one card is quiet and another busy, and no ping order or missed pings are shown.<br><span class="note">What a coverage card shows exactly is not confirmed.</span></div>`;
+    return;
+  }
+  let html = `<h2>${r.name}</h2><div class="dim">${r.area} ${r.quiet ? '&nbsp;<span class="chip quiet">Not offered lately</span>' : '&nbsp;<span class="chip ok">Normal</span>'}</div>`;
+  html += `<p style="margin:12px 0 0">${r.quiet
+    ? `${r.name} was asked <b>${r.last}</b> time${r.last===1?"":"s"} last week, against about <b>${Math.round(r.usual)}</b> usual. Callouts in ${r.area} are still coming in.`
+    : `${r.name} is being asked in their usual range.`}</p>`;
+  html += bars(r);
+  html += `<div class="note">Pings per week. Red = under half of usual.</div>`;
+  html += `<h3 style="margin:16px 0 0;font-size:13.5px">Taken % per week</h3>` + rateChart(r) +
+    `<div class="note">Taken pings divided by pings that week. Week of 10 Aug includes two days before the 12 Aug release.</div>`;
+  if (r.log) {
+    html += `<h3 style="margin:16px 0 0;font-size:13.5px">Missed pings, last two weeks</h3><ul class="log">` +
+      r.log.map(l => `<li><span>${l.when}</span><span>${l.area}</span><span class="miss">${l.out}</span></li>`).join("") +
+      `</ul><div class="note">Last ping in ${r.area}: ${r.lastPing}.</div>`;
+  } else {
+    html += `<div class="note">Missed last week: ${r.missedLast}.</div>`;
+  }
+  if (r.quiet) {
+    html += `<div class="box"><h3>Re-entry ping</h3>
+      The next callout in ${r.area} asks ${r.name} first. A missed re-entry ping costs nothing in the ranking.
+      <div><button class="btn row" id="simBtn">Simulate the next ${r.area} callout</button>
+      <button class="btn ghost row" id="phoneBtn">See it on their phone</button>
+      <button class="btn ghost row" id="areaBtn">See the ${r.area} area</button></div>`;
+    if (state.sim) {
+      const s = state.sim;
+      if (s.step === 1) {
+        html += `<div class="result"><b>New callout in ${r.area}.</b> ${r.name} is asked first (re-entry). What does ${r.name} do?
+          <div><button class="btn row" data-o="taken">Takes it</button><button class="btn ghost row" data-o="turned down">Turns it down</button><button class="btn red row" data-o="missed">Misses it</button></div></div>`;
+      } else {
+        const msg = {
+          "taken": "Taken. It counts as a normal taken ping, and the callout is closed. The flag clears when pings return above half of usual.",
+          "turned down": "Turned down. The callout moves to the next responder. (Assumed to count like any decline; to confirm.)",
+          "missed": "Missed. The callout moves to the next responder. No penalty to the ranking, and the flag stays so you can check in."
+        }[s.out];
+        html += `<div class="result"><b>Result: ${s.out}.</b> ${msg}<div><button class="btn ghost row" id="again">Run it again</button></div></div>`;
+      }
+    }
+    html += `</div>`;
+  }
+  box.innerHTML = html;
+  const sb = $("#simBtn"); if (sb) sb.onclick = () => { state.sim = { step:1 }; renderDetail(); };
+  const ab = $("#areaBtn"); if (ab) ab.onclick = () => { state.area = r.area; renderAreas(); showSection("areas"); };
+  const pb = $("#phoneBtn"); if (pb) pb.onclick = () => { $("#phoneWho").value = r.name; showTab("phone"); };
+  const ag = $("#again"); if (ag) ag.onclick = () => { state.sim = { step:1 }; renderDetail(); };
+  box.querySelectorAll("[data-o]").forEach(b => b.onclick = () => { state.sim = { step:2, out:b.dataset.o }; renderDetail(); });
+}
+
+function renderAll() { renderAlert(); renderRoster(); renderDetail(); renderAreas(); renderHandler(); }
+
+// ---- areas
+// Real figures from rook-database. Callouts per week and how many of them pinged a responder based in that area, for the weeks of
+// 10, 17, 24 and 31 Aug; "usual" callouts per week is 29 Jun to 9 Aug divided by 6 weeks.
+const AREAS = {
+  "Eastgate":[112,[15,15,16,17],[15,15,16,17]], "Foundry Row":[42,[5,7,6,6],[5,7,6,6]], "Greenway":[34,[4,5,5,4],[4,5,5,4]],
+  "Harborside":[61,[6,7,10,11],[6,3,1,1]], "Hillcrest":[56,[8,9,9,7],[8,9,9,7]], "Kingsbridge":[52,[7,8,7,8],[7,8,7,8]],
+  "Lakeshore":[33,[5,6,5,5],[5,6,5,5]], "Midtown":[72,[10,11,12,9],[10,11,12,9]], "Mill District":[43,[6,7,6,6],[6,7,6,6]],
+  "Northfield":[49,[7,6,6,5],[7,6,6,5]], "Old Town":[69,[7,8,12,14],[7,3,2,1]], "Riverside":[39,[6,7,5,7],[6,7,5,7]],
+  "Southport":[64,[12,11,10,11],[12,11,10,11]], "Uptown":[57,[6,7,10,10],[6,2,0,0]], "Westbury":[54,[6,7,5,7],[6,7,5,7]]
+};
+// Who was pinged for callouts in these areas from 12 Aug (pings, taken). Available for the four areas with a quiet responder.
+const WHO = {
+  "Uptown":[["Sgt. Falkirk","Kingsbridge",20,14],["Cindermark","Mill District",16,9],["Sgt. Bulwark","Foundry Row",9,5],["Farlight","Uptown",6,2]],
+  "Harborside":[["Stormwrack","Southport",19,14],["Ironvale","Riverside",11,9],["The Undertow","Harborside",9,3],["The Drift","Greenway",6,4]],
+  "Old Town":[["Nightwell","Midtown",21,13],["Captain Vantage","Hillcrest",19,14],["The Longcast","Lakeshore",12,4],["Vesper","Old Town",10,5]],
+  "Eastgate":[["The Gale","Eastgate",54,48],["Meteor Mite","Eastgate",9,3],["Sgt. Bulwark","Foundry Row",8,0],["Nightwell","Midtown",6,0]]
+};
+Object.keys(AREAS).forEach(a => {
+  const x = AREAS[a];
+  x.usual = x[0] / 6; x.calls = x[1]; x.local = x[2];
+  x.share = x.local[3] / x.calls[3];
+  x.resident = R.filter(r => r.area === a).map(r => r.name);
+  x.gap = x.share < 0.5;
+});
+state.area = "Uptown";
+
+function renderAreas() {
+  const t = $("#areaTable"), d = $("#areaDetail"), al = $("#areaAlert");
+  if (state.view === "today") {
+    al.innerHTML = ""; t.innerHTML = "";
+    d.innerHTML = `<div class="empty">No area-level view of pings is known today.<br>Handlers have a coverage view, but its contents are not confirmed, and whether handlers can see other handlers' responders is not established.</div>`;
+    return;
+  }
+  const names = Object.keys(AREAS).sort((a, b) => (AREAS[b].gap - AREAS[a].gap) || a.localeCompare(b));
+  const gaps = names.filter(n => AREAS[n].gap);
+  al.innerHTML = gaps.length ? `<div class="alert"><b>${gaps.length} areas where the local responder is not being asked:</b> ${gaps.join(", ")}. Callouts there are still coming in and are going to responders from other areas.</div>` : "";
+  t.innerHTML = `<tr><th>Area</th><th>Responders</th><th>Callouts last week</th><th>Local responder asked</th><th>Status</th></tr>` +
+    names.map(n => { const a = AREAS[n]; return `<tr class="row ${state.area===n?'sel':''}" data-a="${n}">
+      <td><b>${n}</b></td><td>${a.resident.join(", ")}</td>
+      <td class="num">${a.calls[3]} <span class="dim">(usual ~${Math.round(a.usual)})</span></td>
+      <td class="num">${a.local[3]} of ${a.calls[3]}</td>
+      <td>${a.gap ? '<span class="chip quiet">Local not asked</span>' : '<span class="chip ok">Normal</span>'}</td></tr>`; }).join("");
+  t.querySelectorAll("tr.row").forEach(tr => tr.onclick = () => { state.area = tr.dataset.a; renderAreas(); });
+  const a = AREAS[state.area];
+  const max = Math.max(a.usual, ...a.calls) * 1.3, h = v => Math.max(2, Math.round(v / max * 100));
+  const vals = [a.usual, ...a.calls], labs = ["Usual / wk", "wk 10 Aug", "wk 17 Aug", "wk 24 Aug", "wk 31 Aug"];
+  let html = `<h2>${state.area}</h2><div class="dim">${a.resident.join(", ")} ${a.gap ? '&nbsp;<span class="chip quiet">Local not asked</span>' : '&nbsp;<span class="chip ok">Normal</span>'}</div>`;
+  html += `<p style="margin:12px 0 0">${a.calls[3]} callouts last week (about ${Math.round(a.usual)} usual). A responder based in ${state.area} was asked on <b>${a.local[3]}</b> of them.</p>`;
+  html += `<div class="bars">${vals.map((v, i) => `<div class="bar ${i === 0 ? 'usual' : ''}"><b>${Math.round(v)}</b><i style="height:${h(v)}%"></i></div>`).join("")}</div>
+    <div class="labels">${labs.map(l => `<div>${l}</div>`).join("")}</div>
+    <div class="labels" style="margin-top:4px"><div></div>${a.local.map((l, i) => `<div><b style="color:${l / a.calls[i] < 0.5 ? '#b42318' : '#067647'}">${l} of ${a.calls[i]}</b></div>`).join("")}</div>
+    <div class="note">Callouts per week. Second row: callouts where a responder based in this area was asked. The week of 10 Aug includes two days before the 12 Aug release.</div>`;
+  if (WHO[state.area]) {
+    html += `<h3 style="margin:16px 0 0;font-size:13.5px">Who was asked, since 12 Aug</h3><table class="tbl"><tr><th>Responder</th><th>Based in</th><th>Pings</th><th>Taken</th></tr>` +
+      WHO[state.area].map(w => `<tr class="${w[1] === state.area ? 'local' : ''}"><td>${w[0]}</td><td>${w[1]}</td><td class="num">${w[2]}</td><td class="num">${w[3]}</td></tr>`).join("") +
+      `</table><div class="note">Green = based in this area. A callout can ping several responders until someone takes it.</div>`;
+  } else {
+    html += `<div class="note">Every callout here pinged its local responder, so nothing to flag.</div>`;
+  }
+  d.innerHTML = html;
+}
+
+function showSection(s) {
+  $("#respMain").hidden = s !== "resp";
+  $("#areasMain").hidden = s !== "areas";
+  $("#nav-resp").classList.toggle("on", s === "resp");
+  $("#nav-areas").classList.toggle("on", s === "areas");
+}
+$("#nav-resp").onclick = () => showSection("resp");
+$("#nav-areas").onclick = () => showSection("areas");
+
+document.querySelectorAll("#viewSeg button, #hViewSeg button").forEach(b => b.onclick = () => {
+  state.view = b.dataset.v; state.sim = null; state.hui = {};
+  document.querySelectorAll("#viewSeg button, #hViewSeg button").forEach(x => x.classList.toggle("on", x.dataset.v === state.view));
+  renderAll();
+});
+
+// ---- handler console ("Your responders")
+// Real figures from rook-database: when each responder was last asked, their recent pings, and what happened to callouts
+// in their own area in the week of 31 Aug. "since" = pings, taken, missed since 12 Aug.
+const HD = {
+  "Farlight":     { last:"28 Aug", since:[11,2,7],  own:0,  calls:10, taken:10, other:10, recent:[["28 Aug","Mill District","missed"],["23 Aug","Mill District","missed"],["22 Aug","Uptown","turned down"]] },
+  "Meteor Mite":  { last:"5 Sep",  since:[14,3,8],  own:0,  calls:17, taken:16, other:0,  recent:[["5 Sep","Midtown","missed"],["29 Aug","Eastgate","missed"],["27 Aug","Midtown","turned down"]] },
+  "The Undertow": { last:"5 Sep",  since:[14,3,9],  own:1,  calls:11, taken:11, other:11, recent:[["5 Sep","Harborside","missed"],["27 Aug","Harborside","missed"]] },
+  "Vesper":       { last:"1 Sep",  since:[17,5,9],  own:1,  calls:14, taken:14, other:14, recent:[["1 Sep","Old Town","missed"],["26 Aug","Old Town","missed"],["24 Aug","Old Town","turned down"]] },
+  "Captain Vantage":   { own:7,  calls:7,  taken:7,  other:0 }, "Cindermark":   { own:6,  calls:6,  taken:6,  other:0 },
+  "Corporal Ashgrove": { own:5,  calls:5,  taken:5,  other:0 }, "Halfmoon":     { own:7,  calls:7,  taken:7,  other:0 },
+  "Ironvale":          { own:7,  calls:7,  taken:5,  other:0 }, "Nightwell":    { own:9,  calls:9,  taken:9,  other:0 },
+  "Sgt. Bulwark":      { own:6,  calls:6,  taken:6,  other:0 }, "Sgt. Falkirk":  { own:8,  calls:8,  taken:6,  other:0 },
+  "Stormwrack":        { own:11, calls:11, taken:9,  other:0 }, "The Drift":     { own:4,  calls:4,  taken:4,  other:0 },
+  "The Gale":          { own:17, calls:17, taken:16, other:0 }, "The Longcast":  { own:5,  calls:5,  taken:5,  other:0 }
+};
+// Each handler looks after one or two responders.
+const HANDLERS = [["Farlight"],["The Undertow"],["Vesper"],["Meteor Mite","The Gale"],["Captain Vantage"],["Cindermark"],["Corporal Ashgrove"],
+  ["Halfmoon"],["Ironvale"],["Nightwell"],["Sgt. Bulwark"],["Sgt. Falkirk"],["Stormwrack"],["The Drift"],["The Longcast"]];
+state.hui = {};
+state.h = 0;
+const hSel = $("#hWho");
+HANDLERS.forEach((g, i) => hSel.add(new Option("Handler for " + g.join(" and "), i)));
+hSel.onchange = () => { state.h = +hSel.value; renderHandler(); };
+
+function ticketFor(r) {
+  const d = HD[r.name];
+  return `Responder: ${r.name} (${r.area})\nAsked about ${r.last} callouts last week, usually about ${Math.round(r.usual)}. Last asked ${d.last}.\nSince 12 Aug: ${d.since[0]} pings, ${d.since[1]} taken, ${d.since[2]} missed.\nPlease check why this responder is not being asked.`;
+}
+
+function hCharts(r) {
+  return `<div class="grid" style="margin-top:14px">
+    <div class="panel"><h3>Pings per week</h3>${bars(r)}<div class="note">Red = under half of usual.</div></div>
+    <div class="panel"><h3>Taken % per week</h3>${rateChart(r)}<div class="note">Week of 10 Aug includes two days before the 12 Aug release.</div></div></div>`;
+}
+
+function hCard(r) {
+  const d = HD[r.name], ui = state.hui[r.name] || {};
+  if (state.view === "today") {
+    return `<div class="hcard"><div class="compact"><h2>${r.name}</h2><span class="dim">${r.area}</span></div>
+      <p class="facts">Edit availability windows and capability tags here. Nothing explains why one responder is busy and another quiet, and no ping order or missed pings are shown.</p>
+      <button class="btn ghost row" disabled style="opacity:.5">Availability</button><button class="btn ghost row" disabled style="opacity:.5">Capability tags</button></div>`;
+  }
+  const areaLine = `${d.taken} of ${d.calls} callouts in ${r.area} last week were taken${d.other ? ` (${d.other} by responders based in other areas)` : ""}. ${r.name} was asked about ${d.own} of them.`;
+  if (!r.quiet) {
+    return `<div class="hcard"><div class="compact"><h2>${r.name}</h2><span class="dim">${r.area}</span><span class="chip ok">Being asked as usual</span></div>
+      <p class="lead">Asked <b>${r.last}</b> times last week (usually about ${Math.round(r.usual)}). Took ${r.taken[3]} (<b>${r.lastRate}%</b>, usually ${r.usualTaken}%), missed ${r.missedLast}.</p>
+      <p class="facts">${areaLine}</p>${hCharts(r)}</div>`;
+  }
+  const opt = (act, label, tag, desc) => `<div class="opt"><button class="btn ghost row" data-act="${act}" data-n="${r.name}" style="margin-top:0">${label}</button>
+    <span class="chip ${tag === "Today" ? "ok" : "prop"}" style="font-size:11px">${tag}</span><div class="note" style="margin:2px 0 4px">${desc}</div></div>`;
+  let you = opt("avail", "Check availability and tags", "Today", "Responders are only asked while marked available.");
+  if (ui.avail) you += `<div class="toast">A quick look at their availability windows and capability tags is worth it. (Opens the existing screen in the live console; not part of this prototype.)</div>`;
+  you += opt("req", `Request the next ${r.area} callout to go to ${r.name}`, "Proposed", "Asks Rook. It is checked against the rules and logged, and Rook can say no.");
+  if (ui.req === "form") you += `<div class="draft">Request to Rook: send the next ${r.area} callout to ${r.name} first.\nReason: ${r.name} has not been asked about callouts since ${HD[r.name].last}.</div><button class="btn row" data-act="reqsend" data-n="${r.name}">Send request</button>`;
+  if (ui.req === "sent") you += `<div class="toast"><b>Request sent.</b> It is logged, and Rook decides. Demo: pick Rook's reply.<div><button class="btn row" data-act="reqres" data-o="approved" data-n="${r.name}">Approved</button><button class="btn red row" data-act="reqres" data-o="declined" data-n="${r.name}">Declined</button></div></div>`;
+  if (ui.req === "approved") you += `<div class="toast"><b>Approved.</b> The next ${r.area} callout will ask ${r.name} first. It is recorded in the audit log.</div>`;
+  if (ui.req === "declined") you += `<div class="toast"><b>Declined.</b> Rook's reason shows here, for example: "The next callout needed someone closer." The decision is logged.</div>`;
+  you += opt("test", `Send ${r.name} a test ping`, "Proposed", "Checks the phone gets a ping, so you can tell a phone problem from an unanswered ping.");
+  if (ui.test === "sending") you += `<div class="toast">Sending a test ping to ${r.name}'s phone...</div>`;
+  if (ui.test === "done") you += `<div class="toast"><b>Demo result: delivered.</b> The phone showed the test ping. A real test would show delivered or not delivered, and whether ${r.name} answered.</div>`;
+  you += opt("ticket", "Tell Rook", "Proposed", "Sends Rook support the counts for this responder.");
+  if (ui.ticket === "draft") you += `<div class="draft">${ticketFor(r)}</div><button class="btn row" data-act="send" data-n="${r.name}">Send to Rook support</button>`;
+  if (ui.ticket === "sent") you += `<div class="toast"><b>Sent.</b> Rook support has the details above.</div>`;
+  const recent = `<div class="panel" style="margin-top:14px"><h3>Recent pings</h3><ul class="log">` +
+    d.recent.map(p => `<li><span>${p[0]}</span><span>${p[1]}</span><span class="${p[2] === 'missed' ? 'miss' : ''}">${p[2]}</span></li>`).join("") + `</ul></div>`;
+  return `<div class="hcard quiet" data-card="${r.name}"><div class="compact"><h2>${r.name}</h2><span class="dim">${r.area}</span><span class="chip quiet">Not being asked lately</span></div>
+    <p class="lead">${r.name} was asked about <b>${r.last}</b> callout${r.last === 1 ? "" : "s"} last week. Usually about ${Math.round(r.usual)}. Last asked ${d.last}.</p>
+    <p class="facts">${areaLine}</p>
+    <p class="facts">Since 12 Aug: ${d.since[0]} pings, ${d.since[1]} taken (<b>${Math.round(100 * d.since[1] / d.since[0])}%</b>, usually ${r.usualTaken}%), ${d.since[2]} missed.</p>
+    <div class="panel" style="margin-top:14px"><h3>What you can do</h3>${you}</div>${hCharts(r)}${recent}</div>`;
+}
+
+function renderHandler() {
+  $("#hNote").textContent = state.view === "today"
+    ? "Pieced together from the Dispatch wiki page and the handler interviews; not checked against the live console."
+    : "'Not being asked lately' = asked about under half as often as usual.";
+  const quiet = state.view === "change" ? HANDLERS[state.h].map(find).filter(r => r.quiet) : [];
+  const badge = $("#hBadge");
+  badge.hidden = !quiet.length; badge.textContent = quiet.length;
+  const banner = quiet.length && !state.hui._dismissed
+    ? `<div class="alert" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:240px"><b>${quiet.map(r => r.name).join(" and ")} ${quiet.length > 1 ? "are" : "is"} not being asked about callouts lately.</b> Responders do not always raise this, so Rook is telling you.</span>
+        <button class="btn ghost row" data-act="dismiss" style="margin:0">Dismiss</button></div>`
+    : "";
+  $("#hCards").innerHTML = banner + HANDLERS[state.h].map(n => hCard(find(n))).join("");
+}
+$("#hCards").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const n = b.dataset.n, act = b.dataset.act, ui = (state.hui[n] = state.hui[n] || {});
+  if (act === "avail") ui.avail = !ui.avail;
+  else if (act === "req") ui.req = ui.req ? null : "form";
+  else if (act === "reqsend") ui.req = "sent";
+  else if (act === "reqres") ui.req = b.dataset.o;
+  else if (act === "test") { ui.test = "sending"; setTimeout(() => { ui.test = "done"; renderHandler(); }, 1200); }
+  else if (act === "ticket") ui.ticket = ui.ticket ? null : "draft";
+  else if (act === "send") ui.ticket = "sent";
+  else if (act === "dismiss") state.hui._dismissed = true;
+  renderHandler();
+});
+
+// ---- tabs
+function showTab(t) {
+  $("#handler").hidden = t !== "handler";
+  $("#console").hidden = t !== "internal";
+  $("#phoneView").hidden = t !== "phone";
+  $("#tab-handler").classList.toggle("on", t === "handler");
+  $("#tab-internal").classList.toggle("on", t === "internal");
+  $("#tab-phone").classList.toggle("on", t === "phone");
+  if (t === "phone") startPing();
+  else clearInterval(timer);
+}
+$("#tab-handler").onclick = () => showTab("handler");
+$("#tab-internal").onclick = () => showTab("internal");
+$("#tab-phone").onclick = () => showTab("phone");
+
+// ---- phone
+const sel = $("#phoneWho");
+R.filter(r => r.quiet).forEach(r => sel.add(new Option(r.name + " (" + r.area + ")", r.name)));
+sel.value = "Farlight";
+sel.onchange = startPing;
+
+let timer = null, left = 60;
+function startPing() {
+  clearInterval(timer); left = 60;
+  const r = find(sel.value);
+  const since = r.lastPing ? `since ${r.lastPing}` : "for a while";
+  const body = $("#phoneBody");
+  body.innerHTML = `
+    <div class="tag">You have not been offered a callout ${since}. This one is yours first.</div>
+    <div class="ping">
+      <h4>Callout in ${r.area}</h4>
+      <div class="dim">Re-entry ping</div>
+      <div class="timer" id="t">60s</div>
+      <div class="timerbar"><i id="tb"></i></div>
+      <div class="btns"><button class="take" id="tk">Take it</button><button class="turn" id="td">Turn down</button></div>
+    </div>`;
+  $("#tk").onclick = () => finish("Taken", "You have the callout. This counts as a normal taken ping.");
+  $("#td").onclick = () => finish("Turned down", "The callout moves to the next responder.");
+  timer = setInterval(() => {
+    left--;
+    const t = $("#t"); if (!t) return clearInterval(timer);
+    t.textContent = left + "s"; $("#tb").style.width = (left / 60 * 100) + "%";
+    if (left <= 0) finish("Missed", "No penalty on this one. The callout moved to the next responder.");
+  }, 1000);
+  setTimeout(() => { const tb = $("#tb"); if (tb) tb.style.width = "98%"; }, 20);
+}
+function finish(title, text) {
+  clearInterval(timer);
+  $("#phoneBody").innerHTML = `<div class="ping"><h4>${title}</h4><p>${text}</p><div class="btns"><button class="turn" id="rs">Show the ping again</button></div></div>`;
+  $("#rs").onclick = startPing;
+}
+
+renderAll();
+</script>
+</body>
+</html>
