@@ -139,6 +139,20 @@
   <div class="card" style="margin-top:26px">
     <h3>The scoring trap: miss pings and your score drops. Drop far enough and you stop being asked, so you can't earn it back. <span class="tag hyp">leading hypothesis</span></h3>
     <p style="margin:0 0 6px">Each callout moves a responder's score: taken +0.08, declined or missed −0.12. Scores were stable before 4.2 and split sharply after (estimated; scores aren't logged).</p>
+    <style>
+      .three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 18px}
+      @media(max-width:820px){.three{grid-template-columns:1fr}}
+      .three .cd{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+      .three .cd .h{font-size:12.5px;font-weight:700;color:var(--mut);margin-bottom:4px}
+      .three .cd .n{font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
+      .three .cd .t{font-size:13.5px;color:var(--mut);margin-top:4px;line-height:1.4}
+      .three .cd.ok{border-top:3px solid var(--ok)} .three .cd.bad{border-top:3px solid var(--bad)}
+    </style>
+    <div class="three">
+      <div class="cd"><div class="h">1 · It was always there</div><div class="n">2019</div><div class="t">The score has never faded back to neutral. A miss costs the same as a decline.</div></div>
+      <div class="cd ok"><div class="h">2 · It was harmless</div><div class="n" style="color:var(--ok)">69–84%</div><div class="t">Taken rate for every responder before 4.2, above the 60% break-even. Dips were earned back.</div></div>
+      <div class="cd bad"><div class="h">3 · The 60-second wait set it off</div><div class="n" style="color:var(--bad)">59%</div><div class="t">of quiet responders' pings were missed. They fell too fast to recover.</div></div>
+    </div>
     <div class="loop">
       <div class="step">Ping missed or turned down<br><small class="mut">same −0.12 penalty</small></div><div class="arr">→</div>
       <div class="step">Score drops</div><div class="arr">→</div>
