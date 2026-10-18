@@ -191,25 +191,26 @@
   <p class="mut" style="font-size:13px;margin:10px 0 0">Weekly, 29 Jun to 6 Sep. The week of 10 Aug includes two days before release, so rate charts split it at 12 Aug. The quiet group's last week rests on 3 pings. Share of pings: missed and turned down are percentages of each group's pings.</p>
 
   <style>
-    .fstat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 4px}
-    @media(max-width:820px){.fstat{grid-template-columns:1fr}}
-    .fstat .c{background:var(--bg2);border:1px solid var(--line);border-top:3px solid var(--bad);border-radius:12px;padding:12px 14px}
-    .fstat .n{font-size:26px;font-weight:800;line-height:1.1;color:var(--bad);letter-spacing:-.5px}
-    .fstat .t{font-size:13.5px;color:var(--mut);margin-top:4px;line-height:1.4}
-    .fquote{border-left:4px solid var(--bad);background:#3a1f26;border-radius:0 10px 10px 0;padding:10px 14px;margin:14px 0 0;font-size:15px}
+    .wk{display:flex;gap:5px;align-items:center;margin:8px 0;font-size:13.5px;color:var(--mut)}
+    .wk .l{width:96px;flex:none}
+    .ic{display:inline-block;width:14px;height:24px;border-radius:3px;background:var(--ok)}
+    .ic.d{background:#8a97ad}.ic.m{background:var(--bad)}
+    .wlg{display:flex;gap:16px;font-size:13px;color:var(--mut);margin-top:10px}
+    .wlg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px}
+    .fquote{border-left:4px solid var(--bad);background:#3a1f26;border-radius:0 10px 10px 0;padding:10px 14px;margin:16px 0 0;font-size:15px}
     .fquote small{display:block;color:var(--mut);margin-top:4px;font-size:12.5px}
   </style>
   <div class="card" style="margin-top:18px">
     <h3>Farlight: sole responder in Uptown <span class="tag est">database</span></h3>
-    <div class="ncall">Before 4.2 every Uptown callout asked Farlight. After it, Farlight was asked on 6 of 31.</div>
-    <div class="fstat">
-      <div class="c"><div class="n">59 of 59 → 6 of 31</div><div class="t">Uptown callouts that asked Farlight</div></div>
-      <div class="c"><div class="n">28 Aug</div><div class="t">Last ping. It was missed.</div></div>
-      <div class="c"><div class="n">11 tickets</div><div class="t">from Farlight's handler, none in the first five days</div></div>
-    </div>
-    <svg viewBox="0 0 700 130" width="100%" id="farDots" style="margin-top:10px"></svg>
+    <div class="ncall">Farlight used to get about 12 pings a week. By the end of August, none.</div>
+      <div class="wk"><span class="l">Before 4.2</span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic d"></span><span class="ic d"></span><span class="ic d"></span></div>
+      <div class="wk"><span class="l">Wk 10 Aug</span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic "></span><span class="ic d"></span><span class="ic d"></span><span class="ic m"></span><span class="ic m"></span><span class="ic m"></span><span class="ic m"></span></div>
+      <div class="wk"><span class="l">Wk 17 Aug</span><span class="ic d"></span><span class="ic m"></span><span class="ic m"></span></div>
+      <div class="wk"><span class="l">Wk 24 Aug</span><span class="ic m"></span></div>
+      <div class="wk"><span class="l">Wk 31 Aug</span><span>no pings</span></div>
+    <div class="wlg"><span><i style="background:var(--ok)"></i>Taken</span><span><i style="background:#8a97ad"></i>Turned down</span><span><i style="background:var(--bad)"></i>Missed</span></div>
     <div class="fquote">"nothing again this week. starting to wonder if im still even in the system."<small>Passed on by Farlight's handler, 1 Sep.</small></div>
-    <p class="mut" style="font-size:12.5px;margin:10px 0 0">Dot positions are illustrative. Only the counts are real.</p>
+    <p class="mut" style="font-size:12.5px;margin:10px 0 0">One block per ping. "Before 4.2" is the weekly average, 29 Jun to 11 Aug. The week of 10 Aug includes two days before release.</p>
   </div>
 </section>
 
@@ -457,17 +458,6 @@ function el(p,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e
   lines("nc4",[20,21,21,22,22,20,23,27,16,18,15],[27,21,19,22,16,22,33,13,25,33,0],50,[0,10,20,30,40,50],pc,"15%","0%");
 })();
 
-// Farlight story dots (positions illustrative; counts real)
-(function(){
-  const s=document.getElementById("farDots"), G="#4fd1a1", Gr="#6f819c";
-  el(s,"text",{x:0,y:16,fill:"#9fb0c9","font-size":12},"Before 4.2: Farlight asked on 59 of 59 (30 dots shown)");
-  for(let i=0;i<30;i++) el(s,"circle",{cx:8+i*(684/29),cy:38,r:5,fill:G});
-  el(s,"text",{x:0,y:78,fill:"#9fb0c9","font-size":12},"After 4.2: Farlight asked on 6 of 31");
-  const hit=[3,8,13,19,24,29];
-  for(let i=0;i<31;i++) el(s,"circle",{cx:8+i*(684/30),cy:100,r:5,fill:hit.includes(i)?G:Gr});
-  el(s,"circle",{cx:480,cy:122,r:4,fill:G}); el(s,"text",{x:490,y:126,fill:"#9fb0c9","font-size":11},"Farlight asked");
-  el(s,"circle",{cx:590,cy:122,r:4,fill:Gr}); el(s,"text",{x:600,y:126,fill:"#9fb0c9","font-size":11},"someone else");
-})();
 
 
 // Story chart: weekly taken % — other 12 vs the four
