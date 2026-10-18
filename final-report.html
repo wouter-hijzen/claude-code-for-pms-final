@@ -190,11 +190,6 @@
   </div>
   <p class="mut" style="font-size:13px;margin:10px 0 0">Weekly, 29 Jun to 6 Sep. The week of 10 Aug includes two days before release, so rate charts split it at 12 Aug. The quiet group's last week rests on 3 pings. Share of pings: missed and turned down are percentages of each group's pings.</p>
 
-  <div class="card" id="fourCard" style="margin-top:18px">
-    <h3>Taken % — before vs since 12 Aug <span class="tag est">database</span></h3>
-    <div id="fourBars"></div>
-  </div>
-
   <style>
     .fstat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 4px}
     @media(max-width:820px){.fstat{grid-template-columns:1fr}}
@@ -462,17 +457,6 @@ function el(p,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e
   lines("nc4",[20,21,21,22,22,20,23,27,16,18,15],[27,21,19,22,16,22,33,13,25,33,0],50,[0,10,20,30,40,50],pc,"15%","0%");
 })();
 
-// Four responders bars
-(function(){
-  const rows=[["Farlight",73,18],["The Undertow",77,21],["Vesper",81,29],["Meteor Mite",69,21],["Other responders combined",77,68]];
-  const box=document.getElementById("fourBars");
-  rows.forEach(r=>{
-    box.insertAdjacentHTML("beforeend",
-     `<div class="barrow"><span class="lab" style="width:130px">${r[0]}</span>
-      <div style="flex:1"><div class="track" style="height:20px;margin-bottom:4px"><div class="fill" style="--w:${r[1]}%;background:#6f819c">before ${r[1]}%</div></div>
-      <div class="track" style="height:20px"><div class="fill" style="--w:${r[2]}%;background:${r[0].startsWith("Other")?"#ffc15e":"#ff7b6b"}">since ${r[2]}%</div></div></div></div>`);
-  });
-})();
 // Farlight story dots (positions illustrative; counts real)
 (function(){
   const s=document.getElementById("farDots"), G="#4fd1a1", Gr="#6f819c";
