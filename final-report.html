@@ -97,21 +97,31 @@
 <section class="hero reveal">
   <div class="kicker">Rook Industries · Dispatch · course report (fictional scenario)</div>
   <h1>We shipped release 4.2.<br>Four responders stopped getting pings.</h1>
-  <p class="lead">We released 4.2 on 12 August. It shortened the ping wait from 90 to 60 seconds and shifted ranking toward proximity. Since then, callout tickets have tripled, acceptance has dropped from about 77% to as low as 54%, and four responders (Farlight, Meteor Mite, The Undertow and Vesper) have almost stopped getting pings. The likely reason is that a missed ping lowers a responder's ranking and nothing raises it again.</p>
-  <div class="mut" style="margin-top:34px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12.5px;color:var(--bad)">The four: Farlight, Meteor Mite, The Undertow, Vesper</div>
-  <div class="big" style="margin-top:10px">
-    <div class="stat"><div class="n bad">75.5% → 23.2%</div><div class="l">taken rate for the four collapsed responders, before vs after 12 Aug</div></div>
-    <div class="stat"><div class="n bad">−69%</div><div class="l">pings per week reaching those four</div></div>
-    <div class="stat"><div class="n acc">~3×</div><div class="l">weekly callout tickets (5–8 before, 20–32 after)</div></div>
-    <div class="stat"><div class="n ok">4 of 16</div><div class="l">responders are the whole "phone never goes off" pattern</div></div>
+  <p class="lead">We released 4.2 on 12 August: a 60-second ping wait (was 90) and ranking weighted toward proximity. Tickets tripled, and four responders almost stopped getting pings. Most likely because a missed ping lowers ranking and nothing raises it again.</p>
+  <style>
+    .cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:30px}
+    @media(max-width:820px){.cmp{grid-template-columns:1fr 1fr}}
+    .cmp .stat{min-width:0;padding:16px 18px}
+    .cmp .t{color:var(--mut);font-size:12.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+    .cmp .r{display:flex;align-items:baseline;gap:8px;margin-top:4px;flex-wrap:wrap}
+    .cmp .r .n{font-size:28px}
+    .cmp .r .w{font-size:12.5px;color:var(--mut)}
+  </style>
+  <div class="cmp">
+    <div class="stat"><div class="t">Taken rate</div>
+      <div class="r"><span class="n bad">75% → 23%</span><span class="w">the four</span></div>
+      <div class="r"><span class="n ok">77% → 68%</span><span class="w">other 12</span></div></div>
+    <div class="stat"><div class="t">Pings per week</div>
+      <div class="r"><span class="n bad">−69%</span><span class="w">the four</span></div>
+      <div class="r"><span class="n ok">+21%</span><span class="w">other 12</span></div></div>
+    <div class="stat"><div class="t">Pings missed</div>
+      <div class="r"><span class="n bad">3% → 59%</span><span class="w">the four</span></div>
+      <div class="r"><span class="n ok">2% → 14%</span><span class="w">other 12</span></div></div>
+    <div class="stat"><div class="t">Pings turned down</div>
+      <div class="r"><span class="n acc">22% → 18%</span><span class="w">the four</span></div>
+      <div class="r"><span class="n acc">21% → 18%</span><span class="w">other 12</span></div></div>
   </div>
-  <div class="mut" style="margin-top:26px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12.5px;color:var(--ok)">The other twelve: roughly normal, with a dip that fits the shorter ping wait</div>
-  <div class="big" style="margin-top:10px">
-    <div class="stat"><div class="n ok">77% → 68%</div><div class="l">taken rate for the other twelve, before vs after 12 Aug</div></div>
-    <div class="stat"><div class="n ok">+21%</div><div class="l">pings per week reaching them. They picked up the work the four lost</div></div>
-    <div class="stat"><div class="n acc">2% → 14%</div><div class="l">of their pings missed, consistent with 90s → 60s. The four went 3% → 59%</div></div>
-    <div class="stat"><div class="n ok">12 of 16</div><div class="l">responders still being asked as usual</div></div>
-  </div>
+  <p class="mut" style="margin:14px 0 0;font-size:13.5px">The four: Farlight, Meteor Mite, The Undertow, Vesper. Before = 29 Jun to 11 Aug, after = 12 Aug to 6 Sep, compared per week. The other twelve's dip fits the shorter wait. Turn-downs barely moved, so this isn't responders choosing to refuse.</p>
 </section>
 
 <!-- WHAT HAPPENED -->
