@@ -332,9 +332,18 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
   </div>
 
   <p class="lead">To achieve this, these are the design choices we made along the way:</p>
-  <ul class="clean mut" style="max-width:860px">
-    <li>A banner on the start screen, so nobody has to go and look.</li>
-    <li>Taken % is shown next to the counts, so the scale of the drop is visible.</li>
+  <style>
+    .dc{list-style:none;padding:0;margin:8px 0 0;max-width:860px}
+    .dc li{display:flex;gap:14px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);color:var(--mut)}
+    .dc li:first-child{border-top:0}
+    .dc .tg{flex:none;width:84px;text-align:center;font-size:12px;font-weight:700;padding:2px 0;border-radius:999px;background:#1c3a6b;color:#9cc3ff}
+    .dc .tg.ct{background:#12372c;color:var(--ok)}
+  </style>
+  <ul class="dc">
+    <li><span class="tg">Insights</span>We included graphs, so handlers see the scale of the change and not just counts.</li>
+    <li><span class="tg">Flags</span>We put the signal in front of the handler, on the start screen, so nobody has to go looking.</li>
+    <li><span class="tg">Options</span>We gave handlers specific actions when something is off, so they can act without waiting on us.</li>
+    <li><span class="tg ct">Control</span>We kept Rook in control: a handler asks, Rook decides, and every decision is logged.</li>
   </ul>
 
   <div class="frame" style="margin-top:18px"><iframe src="05-super-speed/prototype.html" title="Rook Dispatch prototype"></iframe></div>
