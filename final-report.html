@@ -349,13 +349,39 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
   <div class="frame" style="margin-top:18px"><iframe src="05-super-speed/prototype.html" title="Rook Dispatch prototype"></iframe></div>
   <p class="mut" style="font-size:13.5px">Try: pick "Handler for Farlight", then <b>Request the next Uptown callout to go to Farlight</b> → Send request → Approved/Declined. Switch to <b>Responder phone</b> to see the re-entry ping. If the frame is blank, <a href="05-super-speed/prototype.html">open it directly</a>.</p>
 
-  <div class="card" style="margin-top:18px"><h3>Draft product answers <span class="tag prop">not decided</span></h3>
-    <ul class="clean mut">
-      <li>Now: report missed pings in Ravi Menon's weekly report; stopgap score reset for quiet responders.</li>
-      <li>Next release: a miss costs less than a decline; re-entry ping in their own area; handler/responder visibility.</li>
-      <li>Later: scores ease back to neutral; restore the 90-second ping wait or leave it at 60.</li>
-      <li><b>Decisions for leadership:</b> own-area priority vs callout speed; cost of a miss vs a decline; restore 90s or leave the ping wait at 60s.</li>
-    </ul></div>
+  <style>
+    .need{margin-top:26px}
+    .need h3{font-size:22px;margin:0 0 4px}
+    .dec{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:10px 0}
+    .dec .nm{flex:none;width:28px;height:28px;border-radius:50%;background:#4a3a14;color:var(--warn);font-weight:800;display:grid;place-items:center}
+    .dec b{font-size:16px}
+    .dec .ctx{color:var(--mut);font-size:14px;margin-top:3px}
+    .dec .un{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:700;color:var(--warn);background:#4a3a14;border-radius:8px;padding:2px 9px}
+    .plan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+    @media(max-width:820px){.plan{grid-template-columns:1fr}}
+    .plan .p{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--mut)}
+    .plan .p b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+    .plan .p.now b{color:var(--ok)}
+  </style>
+  <div class="need">
+    <h3>What we need from leadership <span class="tag prop">not decided</span></h3>
+    <p class="mut" style="margin:0 0 8px">To support the above, we need three leadership decisions. Each one unlocks a step in the plan below.</p>
+    <div class="dec"><div class="nm">1</div><div><b>Own-area priority vs callout speed</b>
+      <div class="ctx">Own-area priority: ask the responder based in the callout's area first, even if someone elsewhere could answer faster. Callout speed: ask whoever is likeliest to take it fastest, even if that is someone from another area. Right now quiet responders lose their own area's callouts to responders from other areas.</div>
+      <span class="un">Unlocks: re-entry ping (next release)</span></div></div>
+    <div class="dec"><div class="nm">2</div><div><b>How much a miss should cost compared with a decline</b>
+      <div class="ctx">Today a miss costs the same as a decline (−0.12), so a responder who is missing pings is ranked like one who keeps refusing.</div>
+      <span class="un">Unlocks: cheaper misses (next release), scores easing back (later)</span></div></div>
+    <div class="dec"><div class="nm">3</div><div><b>Ping wait: restore 90s or leave at 60s</b>
+      <div class="ctx">The ping wait is how long a ping stays on a phone. 4.2 cut it from 90 to 60 seconds, and other responders' misses rose from 2% to 14%.</div>
+      <span class="un">Unlocks: the ping wait change (later)</span></div></div>
+
+    <div class="plan">
+      <div class="p now"><b>Now</b>Report missed pings in Ravi Menon's weekly report. Stopgap score reset for quiet responders.</div>
+      <div class="p"><b>Next release</b>A miss costs less than a decline. Re-entry ping in their own area. Handlers and responders can see it.</div>
+      <div class="p"><b>Later</b>Scores ease back to neutral. Ping wait decision applied.</div>
+    </div>
+  </div>
 </section>
 
 <!-- SKILL -->
