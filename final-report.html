@@ -365,14 +365,11 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
   </style>
   <div class="need">
     <h3>What we need from leadership <span class="tag prop">not decided</span></h3>
-    <p class="mut" style="margin:0 0 8px">To support the above, we need three leadership decisions. Each one unlocks a step in the plan below.</p>
-    <div class="dec"><div class="nm">1</div><div><b>Own-area priority vs callout speed</b>
-      <div class="ctx">Own-area priority: ask the responder based in the callout's area first, even if someone elsewhere could answer faster. Callout speed: ask whoever is likeliest to take it fastest, even if that is someone from another area. Right now quiet responders lose their own area's callouts to responders from other areas.</div>
-      <span class="un">Unlocks: re-entry ping (next release)</span></div></div>
-    <div class="dec"><div class="nm">2</div><div><b>How much a miss should cost compared with a decline</b>
+    <p class="mut" style="margin:0 0 8px">To support the above, we need two leadership decisions. Each one unlocks a step in the plan below.</p>
+    <div class="dec"><div class="nm">1</div><div><b>How much a miss should cost compared with a decline</b>
       <div class="ctx">Today a miss costs the same as a decline (−0.12), so a responder who is missing pings is ranked like one who keeps refusing.</div>
       <span class="un">Unlocks: cheaper misses (next release), scores easing back (later)</span></div></div>
-    <div class="dec"><div class="nm">3</div><div><b>Ping wait: restore 90s or leave at 60s</b>
+    <div class="dec"><div class="nm">2</div><div><b>Ping wait: restore 90s or leave at 60s</b>
       <div class="ctx">The ping wait is how long a ping stays on a phone. 4.2 cut it from 90 to 60 seconds, and other responders' misses rose from 2% to 14%.</div>
       <span class="un">Unlocks: the ping wait change (later)</span></div></div>
 
@@ -388,7 +385,7 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
 <section id="skill" class="reveal">
   <div class="kicker">So it doesn't happen again</div>
   <h2>The review-checklist skill</h2>
-  <p class="lead">4.2 slipped through because commitments, scope and evidence were never checked in one place: Availability Confidence was marked Committed but never shipped, a fix was claimed in a text file but recorded nowhere, and "seasonal" was stated as fact. The skill runs the same six checks on any brief, every time.</p>
+  <p class="lead">4.2 slipped through because commitments, scope and evidence were never checked in one place: Availability Confidence was marked Committed but never shipped, a fix was claimed in a text file but recorded nowhere, and "seasonal" was stated as fact. To avoid this happening again, we created a review skill that runs the same six checks on any brief, every time: owner, success measure, scope, problem before fix, evidence labels, and the decision needed. It ends with a clear call: Ready to send, Fix first, or Not ready.</p>
 
   <div class="grid2" style="margin-top:22px">
     <div class="card">
