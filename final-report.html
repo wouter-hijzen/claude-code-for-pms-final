@@ -375,7 +375,7 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
 
     <div class="plan">
       <div class="p now"><b>Now</b>Report missed pings in Ravi Menon's weekly report. Stopgap score reset for quiet responders.</div>
-      <div class="p"><b>Next release</b>A miss costs less than a decline. Re-entry ping in their own area. Handlers and responders can see it.</div>
+      <div class="p"><b>Next release</b>A miss costs less than a decline. A re-entry ping lets quiet responders earn their score back. Handlers and responders can see it.</div>
       <div class="p"><b>Later</b>Scores ease back to neutral. Ping wait decision applied.</div>
     </div>
   </div>
@@ -385,7 +385,7 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
 <section id="skill" class="reveal">
   <div class="kicker">So it doesn't happen again</div>
   <h2>The review-checklist skill</h2>
-  <p class="lead">4.2 slipped through because commitments, scope and evidence were never checked in one place: Availability Confidence was marked Committed but never shipped, a fix was claimed in a text file but recorded nowhere, and "seasonal" was stated as fact. To avoid this happening again, we created a review skill that runs the same six checks on any brief, every time: owner, success measure, scope, problem before fix, evidence labels, and the decision needed. It ends with a clear call: Ready to send, Fix first, or Not ready.</p>
+  <p class="lead">4.2 slipped through because commitments, scope and evidence were never checked in one place: Availability Confidence was marked Committed but never shipped, a fix was claimed in a text file but recorded nowhere, and "seasonal" was stated as fact. To avoid this happening again, we created an automated skill that runs the same six checks on every brief, every time: owner, success measure, scope, problem before fix, evidence labels, and the decision needed. It ends with a clear call: Ready to send, Fix first, or Not ready.</p>
 
   <div class="grid2" style="margin-top:22px">
     <div class="card">
@@ -411,17 +411,6 @@ Turn that into a skill called review-checklist, so I can point it at any brief a
     </div>
   </div>
 
-  <div class="card" style="margin-top:18px">
-    <h3>Where it sits in the workflow</h3>
-    <div class="loop">
-      <div class="step">Write brief</div><div class="arr" style="color:var(--acc)">→</div>
-      <div class="step">"run the review checklist"</div><div class="arr" style="color:var(--acc)">→</div>
-      <div class="step">Six verdicts + fix list</div><div class="arr" style="color:var(--acc)">→</div>
-      <div class="step">Fix, re-run</div><div class="arr" style="color:var(--acc)">→</div>
-      <div class="step" style="border-color:var(--ok)">Ready to send</div>
-    </div>
-    <p class="mut" style="margin:0">It lives in this project only (<code>.claude/skills/</code>). A Monday scheduled run was not set up, because the course rules keep work inside this folder.</p>
-  </div>
 </section>
 
 <!-- OPEN -->
